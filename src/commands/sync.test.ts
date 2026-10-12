@@ -98,7 +98,11 @@ describe('qotm sync', () => {
 		const manifests = api.seen.filter((s) => s.path === '/v1/dataset/manifest');
 		expect(manifests[1]!.headers['if-none-match']).toBe(`"v2026.09.1-${r.manifest.sha256}"`);
 		expect(api.seen.filter((s) => s.path === '/releases/qotm.sqlite')).toHaveLength(1);
-		expect(JSON.parse((await run(env, 'sync', '--json')).out)).toEqual({ updated: false, version: 'v2026.09.1' });
+		expect(JSON.parse((await run(env, 'sync', '--json')).out)).toEqual({
+			updated: false,
+			version: 'v2026.09.1',
+			favorites: { status: 'signed-out' }
+		});
 		// --force downloads again.
 		await run(env, 'sync', '--force');
 		expect(api.seen.filter((s) => s.path === '/releases/qotm.sqlite')).toHaveLength(2);

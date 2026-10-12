@@ -58,6 +58,11 @@ database.
   download into `qotm.sqlite.download-<pid>` hashed as it arrives, size,
   sha256 and schema checks, then one rename over `qotm.sqlite` and
   sync.json. Nothing touches the current file until the new one is proven.
+- `src/favorites-sync.ts`: `PUT /v1/me/favorites/sync` with the queued adds
+  and removes (favorites.json `pending`), then the account's merged set
+  becomes the local list; skipped ids stay as `localOnly`. Run by `sync`,
+  right after `login`, and by `save` / `unsave` (3 s timeout; offline, the
+  queue waits).
 - `src/commands/login.ts`: the device flow (BUILD-PLAN §5): code, browser,
   poll at the API's interval (slow_down adds 5s), /v1/me, register the
   terminal with its label and X-Qotm-Dataset, keep the session. Logout

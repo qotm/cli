@@ -47,20 +47,31 @@ export type Favorite = { id: string; addedAt: string };
  * with the account (QOT-101 replays them: adds are idempotent and a remove
  * of something not favorited is a no-op, so replaying is safe).
  */
-export type Favorites = { favorites: Favorite[]; pending: { add: string[]; remove: string[] } };
+export type Favorites = {
+	favorites: Favorite[];
+	pending: { add: string[]; remove: string[] };
+	/** Saved here, but the account skipped them (not public on qotm.dev): kept on this machine only. */
+	localOnly: string[];
+};
 export const favoritesFile = (data: string) => join(data, 'favorites.json');
 export const readFavorites = (data: string): Favorites => {
-	const f = readJson<Favorites>(favoritesFile(data), { favorites: [], pending: { add: [], remove: [] } });
-	return { favorites: f.favorites ?? [], pending: { add: f.pending?.add ?? [], remove: f.pending?.remove ?? [] } };
+	const f = readJson<Partial<Favorites>>(favoritesFile(data), {});
+	return {
+		favorites: f.favorites ?? [],
+		pending: { add: f.pending?.add ?? [], remove: f.pending?.remove ?? [] },
+		localOnly: f.localOnly ?? []
+	};
 };
+export const writeFavorites = (data: string, f: Favorites) => writeJson(favoritesFile(data), f);
 
 /** Adds a favorite; false if it already was one (nothing changes). */
 export function addFavorite(data: string, id: string, now = new Date()): boolean {
 	const f = readFavorites(data);
 	if (f.favorites.some((x) => x.id === id)) return false;
-	writeJson(favoritesFile(data), {
+	writeFavorites(data, {
 		favorites: [{ id, addedAt: now.toISOString() }, ...f.favorites],
-		pending: { add: [...new Set([...f.pending.add, id])], remove: f.pending.remove.filter((x) => x !== id) }
+		pending: { add: [...new Set([...f.pending.add, id])], remove: f.pending.remove.filter((x) => x !== id) },
+		localOnly: f.localOnly
 	});
 	return true;
 }
@@ -69,9 +80,10 @@ export function addFavorite(data: string, id: string, now = new Date()): boolean
 export function removeFavorite(data: string, id: string): boolean {
 	const f = readFavorites(data);
 	if (!f.favorites.some((x) => x.id === id)) return false;
-	writeJson(favoritesFile(data), {
+	writeFavorites(data, {
 		favorites: f.favorites.filter((x) => x.id !== id),
-		pending: { add: f.pending.add.filter((x) => x !== id), remove: [...new Set([...f.pending.remove, id])] }
+		pending: { add: f.pending.add.filter((x) => x !== id), remove: [...new Set([...f.pending.remove, id])] },
+		localOnly: f.localOnly.filter((x) => x !== id)
 	});
 	return true;
 }

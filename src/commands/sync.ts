@@ -7,7 +7,8 @@ import { parse } from '../args.js';
 import type { Command } from '../commands.js';
 import { Dataset, DatasetError, SCHEMA_VERSION } from '../dataset.js';
 import { api, apiMessage } from '../http.js';
-import { CliError } from '../io.js';
+import { syncFavorites, type FavoritesSync } from '../favorites-sync.js';
+import { CliError, type Io } from '../io.js';
 import { style, useColor } from '../output.js';
 import { qotmPaths } from '../paths.js';
 import { readSession, readSync, writeSync } from '../state.js';
@@ -111,8 +112,9 @@ interrupted or mismatched download leaves your quotes as they were.
 				...(session && have ? { 'x-qotm-dataset': have.version } : {})
 			}
 		});
-		const report = (out: Record<string, unknown>, text: string) => {
-			io.stdout(v.json ? `${JSON.stringify(out)}\n` : text);
+		const report = async (out: Record<string, unknown>, text: string) => {
+			const favorites = await syncFavorites(io);
+			io.stdout(v.json ? `${JSON.stringify({ ...out, favorites })}\n` : text + favoritesLine(io, favorites));
 			return 0;
 		};
 		if (res.status === 404)
@@ -184,3 +186,12 @@ interrupted or mismatched download leaves your quotes as they were.
 		);
 	}
 };
+
+function favoritesLine(io: Io, f: FavoritesSync): string {
+	const m = style.muted(useColor(io));
+	if (f.status === 'signed-out') return '';
+	if (f.status === 'queued')
+		return m(`favorites: ${f.pending} change${f.pending === 1 ? '' : 's'} waiting (${f.reason})\n`);
+	const skipped = f.skipped.length ? `; ${f.skipped.length} not on qotm.dev, kept here only` : '';
+	return m(`favorites: ${f.count}, synced with @${f.handle ?? 'your account'}${skipped}\n`);
+}

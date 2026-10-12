@@ -1,7 +1,8 @@
 import { parse } from '../args.js';
 import type { Command } from '../commands.js';
 import { openDataset } from '../dataset.js';
-import { CliError } from '../io.js';
+import { syncFavorites } from '../favorites-sync.js';
+import { CliError, type Io } from '../io.js';
 import { style, useColor } from '../output.js';
 import { qotmPaths } from '../paths.js';
 import { addFavorite, addPersonal, readFavorites, readHistory, removeFavorite } from '../store.js';
@@ -22,18 +23,26 @@ function target(given: string | undefined, data: string, verb: string): string {
 	return latest.id;
 }
 
+/** After a save or unsave: shares it with the account straight away, or says it waits. */
+async function share(io: Io): Promise<string> {
+	const r = await syncFavorites(io, 3000);
+	return r.status === 'queued' ? ` (it syncs with your account later: ${r.reason})` : '';
+}
+
 /** `qotm save`: favorite the last quote shown (or one by id). Works offline. */
 export const save: Command = {
 	name: 'save',
 	usage: 'qotm save [<id>]',
 	summary: 'add the last quote to your favorites',
-	help: 'Favorites live on this machine; once you are signed in, qotm sync shares them with your account.',
-	run(args, io) {
+	help: 'Favorites live on this machine; signed in, they are shared with your account (offline, at the next qotm sync).',
+	async run(args, io) {
 		const { positionals } = parse(args, {}, true);
 		const { data } = qotmPaths(io.env);
 		const id = target(positionals[0], data, 'save');
 		const muted = style.muted(useColor(io));
-		io.stdout(muted(addFavorite(data, id) ? 'saved to favorites\n' : 'already in your favorites\n'));
+		const added = addFavorite(data, id);
+		const note = added ? await share(io) : '';
+		io.stdout(muted(added ? `saved to favorites${note}\n` : 'already in your favorites\n'));
 		return 0;
 	}
 };
@@ -43,12 +52,14 @@ export const unsave: Command = {
 	name: 'unsave',
 	usage: 'qotm unsave [<id>]',
 	summary: 'remove the last quote (or <id>) from your favorites',
-	run(args, io) {
+	async run(args, io) {
 		const { positionals } = parse(args, {}, true);
 		const { data } = qotmPaths(io.env);
 		const id = target(positionals[0], data, 'unsave');
 		const muted = style.muted(useColor(io));
-		io.stdout(muted(removeFavorite(data, id) ? 'removed from favorites\n' : 'not in your favorites\n'));
+		const removed = removeFavorite(data, id);
+		const note = removed ? await share(io) : '';
+		io.stdout(muted(removed ? `removed from favorites${note}\n` : 'not in your favorites\n'));
 		return 0;
 	}
 };

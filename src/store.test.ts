@@ -60,7 +60,7 @@ describe('the local store', () => {
 	it('reads an unreadable file as empty rather than failing', () => {
 		const data = tempDir();
 		writeFileSync(favoritesFile(data), '{ half a file');
-		expect(readFavorites(data)).toEqual({ favorites: [], pending: { add: [], remove: [] } });
+		expect(readFavorites(data)).toEqual({ favorites: [], pending: { add: [], remove: [] }, localOnly: [] });
 		expect(addFavorite(data, 'q_8f2k1c')).toBe(true);
 	});
 });

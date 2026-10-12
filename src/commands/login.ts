@@ -4,6 +4,7 @@ import type { Command } from '../commands.js';
 import { setting } from '../config.js';
 import { openDataset } from '../dataset.js';
 import { api, apiMessage } from '../http.js';
+import { syncFavorites } from '../favorites-sync.js';
 import { CliError, type Io } from '../io.js';
 import { style, useColor } from '../output.js';
 import { qotmPaths } from '../paths.js';
@@ -137,6 +138,9 @@ and this terminal is signed in. It is listed under Settings › Terminals.
 			signedInAt: new Date().toISOString()
 		});
 		io.stdout(`signed in as @${me.body.handle}. ${muted('This terminal is listed under Settings › Terminals.')}\n`);
+		// Favorites saved here before signing in join the account's, and the account's come here.
+		const f = await syncFavorites(io);
+		if (f.status === 'synced') io.stdout(muted(`favorites: ${f.count}, synced with your account\n`));
 		return 0;
 	}
 };

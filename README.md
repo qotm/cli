@@ -37,8 +37,10 @@ qotm add "Name things twice." --author Ada   # keep a private quote
 qotm --personal               # a quote from your private quotes
 ```
 
-Saving a quote twice changes nothing. Once you are signed in, `qotm sync`
-shares favorites with your account.
+Saving a quote twice changes nothing. Signed in, favorites are shared with
+your account: a save or unsave goes up straight away, or, offline, waits for
+the next `qotm sync`, which also brings down the favorites you added on
+qotm.dev.
 
 ## Updating the quotes
 
