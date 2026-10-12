@@ -43,7 +43,9 @@ export async function main(argv: string[], io: Io): Promise<number> {
 			io.stdout(`${VERSION}\n`);
 			return 0;
 		}
-		if (first === undefined) return await DEFAULT_COMMAND.run([], io);
+		// `qotm` and `qotm --topic x`: options without a command are the default command's.
+		if (first === undefined || (first.startsWith('-') && !['-h', '--help', '-v', '--version'].includes(first)))
+			return await DEFAULT_COMMAND.run(argv, io);
 		if (first === '-h' || first === '--help') {
 			io.stdout(usage());
 			return 0;

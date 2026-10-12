@@ -101,10 +101,51 @@ export class Dataset {
 		return Number((this.db.prepare('SELECT count(*) AS n FROM quotes').get() as Row).n);
 	}
 
-	/** One quote at random. */
-	random(): Quote | null {
-		const row = this.db.prepare('SELECT * FROM quotes ORDER BY random() LIMIT 1').get() as Row | undefined;
+	/** The ids `qotm` may draw from: every quote, or those under a topic, by an author, or in a set. */
+	candidates(filter: { topic?: string; author?: string; ids?: string[] } = {}): string[] {
+		const where: string[] = [];
+		const params: (string | number)[] = [];
+		if (filter.topic) {
+			where.push(
+				'id IN (SELECT qt.quote_id FROM quote_topics qt JOIN topics t ON t.id = qt.topic_id WHERE t.slug = ?)'
+			);
+			params.push(filter.topic);
+		}
+		if (filter.author) {
+			where.push('author_slug = ?');
+			params.push(filter.author);
+		}
+		if (filter.ids) {
+			if (!filter.ids.length) return [];
+			where.push(`id IN (${filter.ids.map(() => '?').join(', ')})`);
+			params.push(...filter.ids);
+		}
+		const sql = `SELECT id FROM quotes${where.length ? ` WHERE ${where.join(' AND ')}` : ''} ORDER BY n`;
+		return (this.db.prepare(sql).all(...params) as Row[]).map((r) => String(r.id));
+	}
+
+	quote(id: string): Quote | null {
+		const row = this.db.prepare('SELECT * FROM quotes WHERE id = ?').get(id) as Row | undefined;
 		return row ? toQuote(row) : null;
+	}
+
+	/** A quote's topic slugs. */
+	topicsOf(id: string): string[] {
+		return (
+			this.db
+				.prepare(
+					'SELECT t.slug FROM quote_topics qt JOIN topics t ON t.id = qt.topic_id WHERE qt.quote_id = ? ORDER BY t.slug'
+				)
+				.all(id) as Row[]
+		).map((r) => String(r.slug));
+	}
+
+	topics(): string[] {
+		return (this.db.prepare('SELECT slug FROM topics ORDER BY slug').all() as Row[]).map((r) => String(r.slug));
+	}
+
+	authors(): string[] {
+		return (this.db.prepare('SELECT slug FROM authors ORDER BY slug').all() as Row[]).map((r) => String(r.slug));
 	}
 
 	close(): void {

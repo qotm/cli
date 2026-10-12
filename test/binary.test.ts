@@ -30,6 +30,28 @@ describe('the qotm binary', () => {
 		expect(qotm([], home)).toMatch(/\n— .+\n$/);
 	});
 
+	it('pipes plain text: no escape codes, even with --source', () => {
+		const out = qotm(['--source']);
+		expect(out).not.toMatch(/\x1b\[/);
+		expect(qotm(['--plain'])).not.toMatch(/\x1b\[/);
+	});
+
+	it('prints valid JSON with --json', () => {
+		expect(JSON.parse(qotm(['--json']))).toHaveProperty('text');
+	});
+
+	it('answers in under 150 ms', () => {
+		const home = tempDir();
+		qotm([], home); // warm the file cache
+		const runs = Array.from({ length: 5 }, () => {
+			const start = performance.now();
+			qotm([], home);
+			return performance.now() - start;
+		}).sort((a, b) => a - b);
+		// The median of five, from process start to exit.
+		expect(runs[2]).toBeLessThan(150);
+	});
+
 	it('prints no SQLite experimental warning', () => {
 		const out = execFileSync(process.execPath, [CLI], {
 			encoding: 'utf8',

@@ -20,7 +20,14 @@ describe('the dataset', () => {
 		const ds = Dataset.open(local);
 		expect(ds.meta).toEqual({ version: 'v2026.09.1', schemaVersion: 1, builtAt: '2026-09-26T18:02:00.000Z' });
 		expect(ds.count()).toBe(3);
-		expect(QUOTES.map((q) => q.id)).toContain(ds.random()!.id);
+		expect(ds.candidates()).toEqual(QUOTES.map((q) => q.id));
+		expect(ds.candidates({ topic: 'debugging' })).toEqual(['q_1t7c4e', 'q_4r8y1p']);
+		expect(ds.candidates({ author: 'dijkstra' })).toEqual(['q_8f2k1c']);
+		expect(ds.candidates({ ids: ['q_4r8y1p', 'q_nope00'] })).toEqual(['q_4r8y1p']);
+		expect(ds.candidates({ ids: [] })).toEqual([]);
+		expect(ds.quote('q_8f2k1c')).toMatchObject({ author: 'Edsger W. Dijkstra', authorSlug: 'dijkstra', year: 1975 });
+		expect(ds.topicsOf('q_8f2k1c')).toEqual(['simplicity']);
+		expect(ds.topics()).toEqual(['debugging', 'simplicity']);
 		ds.close();
 	});
 

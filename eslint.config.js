@@ -11,5 +11,10 @@ export default tseslint.config(
 		rules: {
 			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
 		}
+	},
+	{
+		// Tests match terminal escape codes on purpose.
+		files: ['**/*.test.ts'],
+		rules: { 'no-control-regex': 'off' }
 	}
 );
