@@ -1,4 +1,5 @@
 import { add, favorites, save, unsave } from './commands/local.js';
+import { login, logout } from './commands/login.js';
 import { last, quote } from './commands/quote.js';
 import { config, doctor, open, search, status } from './commands/tools.js';
 import type { Io } from './io.js';
@@ -16,7 +17,21 @@ export type Command = {
 };
 
 /** Every command, in the order `qotm --help` lists them. Each ticket adds its own. */
-export const COMMANDS: Command[] = [quote, last, save, unsave, favorites, add, open, search, status, config, doctor];
+export const COMMANDS: Command[] = [
+	quote,
+	last,
+	save,
+	unsave,
+	favorites,
+	add,
+	open,
+	search,
+	login,
+	logout,
+	status,
+	config,
+	doctor
+];
 
 /** What `qotm` with no command runs. */
 export const DEFAULT_COMMAND = quote;

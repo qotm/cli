@@ -40,6 +40,16 @@ qotm --personal               # a quote from your private quotes
 Saving a quote twice changes nothing. Once you are signed in, `qotm sync`
 shares favorites with your account.
 
+## Your account
+
+```sh
+qotm login                    # sign in: approve the printed code at qotm.dev/device
+qotm logout                   # sign out and revoke this terminal
+```
+
+Signing in lists this terminal under Settings › Terminals on qotm.dev.
+Signing out keeps your local quotes, favorites and dataset.
+
 ## More
 
 ```sh

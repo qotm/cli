@@ -13,10 +13,20 @@ favorites and submissions. The contract with the API is BUILD-PLAN.md §5
 yarn build          # tsup → dist/cli.js (one bundled file, shebang)
 yarn typecheck && yarn lint && yarn format:check
 yarn test           # Vitest: src/**/*.test.ts, test/**/*.test.ts
+yarn test:e2e       # the built qotm against the backend's test API (see below)
 yarn test:pack      # npm pack, global install into a scratch prefix, run qotm --help and qotm offline
 node scripts/snapshot.mjs [--api <url> | --from <file>]   # refresh data/qotm.sqlite (the bundled snapshot)
 node dist/cli.js    # run the build
 ```
+
+**The e2e suite** (`vitest.e2e.config.ts`, `test/e2e/*.e2e.ts`) builds the
+CLI, reseeds the backend's test database (`yarn test:db:seed:e2e` in
+`../backend/apps/api`), flushes the test Redis, and starts the API from its
+compiled build with `.env.test` on port 5170 (password sign-in on, so the
+tests approve device codes as the seeded member). It needs the backend's test
+stack up (`yarn test:dc:up` there) and `backend/apps/api/dist` built.
+Never run it alongside the backend's or web's e2e suites: they share the test
+database.
 
 ## Layout
 
@@ -38,7 +48,12 @@ node dist/cli.js    # run the build
   `qotm/<version>`, JSON, timeouts, errors in words). Node's fetch refuses the
   Fetch spec's "bad ports" (5060, the dev API's, is one): point the CLI at
   `https://api.qotm.site` or the test API on 5160 instead.
-- `src/state.ts`: session.json (config folder) and sync.json (data folder).
+- `src/state.ts`: session.json (config folder, mode 0600: the bearer token)
+  and sync.json (data folder).
+- `src/commands/login.ts`: the device flow (BUILD-PLAN §5): code, browser,
+  poll at the API's interval (slow_down adds 5s), /v1/me, register the
+  terminal with its label and X-Qotm-Dataset, keep the session. Logout
+  revokes `/v1/me/devices/current` and keeps everything local.
 - `src/io.ts`: `Io` (stdout, stderr, env, isTTY, columns, openUrl) and `CliError` (a message
   for the user and an exit code). Commands never touch `process` directly,
   so tests run them in-process with `testIo()` from `test/io.ts`.

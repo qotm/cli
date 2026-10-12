@@ -30,7 +30,8 @@
 		"format:check": "prettier --check .",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:pack": "node scripts/pack-check.mjs"
+		"test:pack": "node scripts/pack-check.mjs",
+		"test:e2e": "vitest run --config vitest.e2e.config.ts"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
