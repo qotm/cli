@@ -40,6 +40,20 @@ qotm --personal               # a quote from your private quotes
 Saving a quote twice changes nothing. Once you are signed in, `qotm sync`
 shares favorites with your account.
 
+## More
+
+```sh
+qotm open                     # the last quote's page on qotm.dev ("opening q/1t7c4e in your browser")
+qotm search complexity        # search your dataset, offline (--web: on qotm.dev; --json)
+qotm status                   # dataset version, last sync, account, counts (--json)
+qotm config                   # settings: api, site, color, history (get / set / unset; --json)
+qotm doctor                   # check Node, folders, the dataset's sha256 and the API (--json)
+```
+
+`qotm doctor` exits 1 and names the problem when a check fails.
+`QOTM_API_URL` and `QOTM_SITE_URL` override the api and site settings for
+one run.
+
 Output is coloured on a terminal and plain when piped. `--plain` forces
 plain text (no colour, no wrapping); `NO_COLOR` and `TERM=dumb` are honoured.
 

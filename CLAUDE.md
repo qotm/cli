@@ -32,7 +32,14 @@ node dist/cli.js    # run the build
   `test/fixtures/schema-v1.sql`, a copy of the worker's schema that
   `test/schema.test.ts` keeps equal. `test/no-network.mjs` (an `--import`
   preload) makes any network access throw.
-- `src/io.ts`: `Io` (stdout, stderr, env, isTTY) and `CliError` (a message
+- `src/config.ts`: settings.json in the config folder (api, site, color,
+  history), with env overrides (`QOTM_API_URL`, `QOTM_SITE_URL`).
+- `src/http.ts`: `api()`, the one way to call the API (User-Agent
+  `qotm/<version>`, JSON, timeouts, errors in words). Node's fetch refuses the
+  Fetch spec's "bad ports" (5060, the dev API's, is one): point the CLI at
+  `https://api.qotm.site` or the test API on 5160 instead.
+- `src/state.ts`: session.json (config folder) and sync.json (data folder).
+- `src/io.ts`: `Io` (stdout, stderr, env, isTTY, columns, openUrl) and `CliError` (a message
   for the user and an exit code). Commands never touch `process` directly,
   so tests run them in-process with `testIo()` from `test/io.ts`.
 

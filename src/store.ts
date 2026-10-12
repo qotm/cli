@@ -23,7 +23,7 @@ export function writeJson(file: string, value: unknown): void {
 	renameSync(tmp, file);
 }
 
-/** How many recent quotes `qotm` avoids repeating. */
+/** How many recent quotes `qotm` avoids repeating, unless `qotm config set history` says otherwise. */
 export const HISTORY_SIZE = 50;
 
 export type Shown = { id: string; at: string };
@@ -32,11 +32,11 @@ export type History = { shown: Shown[] };
 export const historyFile = (data: string) => join(data, 'history.json');
 export const readHistory = (data: string) => readJson<History>(historyFile(data), { shown: [] });
 
-/** Remembers a shown quote, newest first, keeping the last HISTORY_SIZE. */
-export function remember(data: string, id: string, now = new Date()): void {
+/** Remembers a shown quote, newest first, keeping the last `size` (at least the latest, for qotm last). */
+export function remember(data: string, id: string, now = new Date(), size = HISTORY_SIZE): void {
 	const { shown } = readHistory(data);
 	writeJson(historyFile(data), {
-		shown: [{ id, at: now.toISOString() }, ...shown.filter((s) => s.id !== id)].slice(0, HISTORY_SIZE)
+		shown: [{ id, at: now.toISOString() }, ...shown.filter((s) => s.id !== id)].slice(0, Math.max(1, size))
 	});
 }
 

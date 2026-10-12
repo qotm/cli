@@ -1,6 +1,7 @@
 import { parse } from '../args.js';
 import type { Command } from '../commands.js';
 import { openDataset } from '../dataset.js';
+import { setting } from '../config.js';
 import { CliError, type Io } from '../io.js';
 import { qotmPaths } from '../paths.js';
 import { closest, pick } from '../pick.js';
@@ -43,7 +44,8 @@ export const quote: Command = {
 	usage: 'qotm [--topic <slug>] [--author <slug>] [--favorites | --personal] [--source] [--plain | --json]',
 	summary: 'print a quote (the default)',
 	help: `
-Prints one curated quote from the local dataset, avoiding the last 50 shown.
+Prints one curated quote from the local dataset, avoiding the last 50 shown
+(qotm config set history <n>).
 
   --topic <slug>    from one topic: qotm --topic debugging
   --author <slug>   by one author: qotm --author dijkstra
@@ -58,7 +60,13 @@ Prints one curated quote from the local dataset, avoiding the last 50 shown.
 		const { values: v } = parse(args, OPTIONS);
 		if (v.favorites && v.personal) throw new CliError('Choose --favorites or --personal, not both.', 2);
 		const { data } = qotmPaths(io.env);
-		const recent = readHistory(data).shown.map((s) => s.id);
+		const size = Number(setting(io, 'history'));
+		// history 0: no variety rule (qotm last still works).
+		const recent = size
+			? readHistory(data)
+					.shown.slice(0, size)
+					.map((s) => s.id)
+			: [];
 
 		if (v.personal) {
 			if (v.topic || v.author)
@@ -70,7 +78,7 @@ Prints one curated quote from the local dataset, avoiding the last 50 shown.
 			);
 			if (!id) throw new CliError('You have no private quotes yet. Keep one with qotm add "<text>".');
 			print(fromPersonal(quotes.find((q) => q.id === id)!), io, v, null);
-			remember(data, id);
+			remember(data, id, new Date(), size);
 			return 0;
 		}
 
@@ -92,7 +100,7 @@ Prints one curated quote from the local dataset, avoiding the last 50 shown.
 				throw new CliError('No quotes match. Try without --topic or --author.');
 			}
 			print(fromDataset(dataset.quote(id)!, dataset.topicsOf(id)), io, v, dataset);
-			remember(data, id);
+			remember(data, id, new Date(), size);
 			return 0;
 		} finally {
 			dataset.close();

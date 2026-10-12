@@ -9,6 +9,8 @@ const TABLES = ['authors', 'meta', 'quote_topics', 'quotes', 'quotes_fts', 'topi
 
 /** The dataset that ships inside the package, used until the first `qotm sync`. */
 export const SNAPSHOT = fileURLToPath(new URL('../data/qotm.sqlite', import.meta.url));
+/** Its manifest: version, size and sha256 (scripts/snapshot.mjs writes both). */
+export const SNAPSHOT_MANIFEST = fileURLToPath(new URL('../data/snapshot.json', import.meta.url));
 
 export type DatasetMeta = { version: string; schemaVersion: number; builtAt: string | null };
 
@@ -146,6 +148,23 @@ export class Dataset {
 
 	authors(): string[] {
 		return (this.db.prepare('SELECT slug FROM authors ORDER BY slug').all() as Row[]).map((r) => String(r.slug));
+	}
+
+	/**
+	 * Full-text search (FTS5 over text, author and work), best match first.
+	 * Each word is matched as typed or as a prefix, all words required.
+	 */
+	search(text: string, limit = 10): Quote[] {
+		const words = text.match(/[\p{L}\p{N}]+/gu) ?? [];
+		if (!words.length) return [];
+		const match = words.map((w) => `"${w.replace(/"/g, '')}"*`).join(' ');
+		return (
+			this.db
+				.prepare(
+					'SELECT q.* FROM quotes_fts f JOIN quotes q ON q.n = f.rowid WHERE quotes_fts MATCH ? ORDER BY rank LIMIT ?'
+				)
+				.all(match, limit) as Row[]
+		).map(toQuote);
 	}
 
 	close(): void {

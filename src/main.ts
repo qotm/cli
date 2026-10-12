@@ -1,7 +1,8 @@
 import { COMMANDS, DEFAULT_COMMAND, type Command } from './commands.js';
 import { CliError, type Io } from './io.js';
 
-export const VERSION = __QOTM_VERSION__;
+export { VERSION } from './version.js';
+import { VERSION } from './version.js';
 
 const pad = (s: string, n: number) => s + ' '.repeat(Math.max(1, n - s.length));
 

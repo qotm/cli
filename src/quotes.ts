@@ -93,7 +93,7 @@ export function jsonQuote(q: Shown, io: Io, dataset: Dataset | null): string {
 		source: q.source,
 		sourceUrl: q.sourceUrl,
 		topics: q.topics,
-		url: quoteUrl(io.env, q.id),
+		url: quoteUrl(io, q.id),
 		dataset: q.type === 'personal' ? null : (dataset?.meta.version ?? null)
 	})}\n`;
 }

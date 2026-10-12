@@ -84,7 +84,7 @@ describe('output', () => {
 			dataset: 'v2026.09.1',
 			topics: ['simplicity']
 		});
-		expect(quoteUrl({ QOTM_SITE_URL: 'https://qotm.site/' }, 'q_8f2k1c')).toBe('https://qotm.site/q/8f2k1c');
-		expect(quoteUrl({}, 'p_123')).toBeNull();
+		expect(quoteUrl(testIo({ QOTM_SITE_URL: 'https://qotm.site/' }).io, 'q_8f2k1c')).toBe('https://qotm.site/q/8f2k1c');
+		expect(quoteUrl(testIo().io, 'p_123')).toBeNull();
 	});
 });
