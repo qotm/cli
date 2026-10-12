@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { dirname, join } from 'node:path';
 
 /**
@@ -41,9 +42,39 @@ export function remember(data: string, id: string, now = new Date()): void {
 
 /** A favorite: a dataset quote id, and when it was saved. */
 export type Favorite = { id: string; addedAt: string };
-export type Favorites = { favorites: Favorite[] };
+/**
+ * Favorites, newest first, and the changes made here since the last sync
+ * with the account (QOT-101 replays them: adds are idempotent and a remove
+ * of something not favorited is a no-op, so replaying is safe).
+ */
+export type Favorites = { favorites: Favorite[]; pending: { add: string[]; remove: string[] } };
 export const favoritesFile = (data: string) => join(data, 'favorites.json');
-export const readFavorites = (data: string) => readJson<Favorites>(favoritesFile(data), { favorites: [] });
+export const readFavorites = (data: string): Favorites => {
+	const f = readJson<Favorites>(favoritesFile(data), { favorites: [], pending: { add: [], remove: [] } });
+	return { favorites: f.favorites ?? [], pending: { add: f.pending?.add ?? [], remove: f.pending?.remove ?? [] } };
+};
+
+/** Adds a favorite; false if it already was one (nothing changes). */
+export function addFavorite(data: string, id: string, now = new Date()): boolean {
+	const f = readFavorites(data);
+	if (f.favorites.some((x) => x.id === id)) return false;
+	writeJson(favoritesFile(data), {
+		favorites: [{ id, addedAt: now.toISOString() }, ...f.favorites],
+		pending: { add: [...new Set([...f.pending.add, id])], remove: f.pending.remove.filter((x) => x !== id) }
+	});
+	return true;
+}
+
+/** Removes a favorite; false if it was not one. */
+export function removeFavorite(data: string, id: string): boolean {
+	const f = readFavorites(data);
+	if (!f.favorites.some((x) => x.id === id)) return false;
+	writeJson(favoritesFile(data), {
+		favorites: f.favorites.filter((x) => x.id !== id),
+		pending: { add: f.pending.add.filter((x) => x !== id), remove: [...new Set([...f.pending.remove, id])] }
+	});
+	return true;
+}
 
 /** A private quote kept with `qotm add`: on this machine only, never in the dataset. */
 export type PersonalQuote = {
@@ -57,3 +88,31 @@ export type PersonalQuote = {
 export type Personal = { quotes: PersonalQuote[] };
 export const personalFile = (data: string) => join(data, 'personal.json');
 export const readPersonal = (data: string) => readJson<Personal>(personalFile(data), { quotes: [] });
+
+/** Keeps a private quote; returns it with its new id (p_ and 8 random characters). */
+export function addPersonal(
+	data: string,
+	quote: { text: string; author?: string | null; work?: string | null; year?: number | null },
+	now = new Date()
+): PersonalQuote {
+	const { quotes } = readPersonal(data);
+	let id: string;
+	do
+		id = `p_${randomBytes(6)
+			.toString('base64url')
+			.toLowerCase()
+			.replace(/[^a-z0-9]/g, '')
+			.slice(0, 8)
+			.padEnd(8, '0')}`;
+	while (quotes.some((q) => q.id === id));
+	const created: PersonalQuote = {
+		id,
+		text: quote.text,
+		author: quote.author ?? null,
+		work: quote.work ?? null,
+		year: quote.year ?? null,
+		createdAt: now.toISOString()
+	};
+	writeJson(personalFile(data), { quotes: [...quotes, created] });
+	return created;
+}

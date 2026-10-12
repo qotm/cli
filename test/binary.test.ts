@@ -52,6 +52,18 @@ describe('the qotm binary', () => {
 		expect(runs[2]).toBeLessThan(150);
 	});
 
+	it('keeps favorites and private quotes across runs, offline', () => {
+		const home = tempDir();
+		qotm([], home);
+		expect(qotm(['save'], home)).toBe('saved to favorites\n');
+		qotm(['add', 'Name things twice.'], home);
+		// New processes, still with the network refused.
+		expect(qotm(['favorites'], home).split('\n').filter(Boolean)).toHaveLength(1);
+		expect(qotm(['save'], home)).toBe('already in your favorites\n');
+		expect(qotm(['--personal'], home)).toBe('Name things twice.\n—  you\n');
+		expect(qotm(['--favorites'], home)).toMatch(/\n— {2}.+\n$/);
+	});
+
 	it('prints no SQLite experimental warning', () => {
 		const out = execFileSync(process.execPath, [CLI], {
 			encoding: 'utf8',

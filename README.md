@@ -24,6 +24,22 @@ qotm --source                 # with where it is from
 qotm last                     # the previous quote again
 ```
 
+## Favorites and private quotes
+
+These work signed out and offline, kept on this machine:
+
+```sh
+qotm save                     # favorite the last quote ("saved to favorites")
+qotm save q_8f2k1c            # or one by id
+qotm unsave                   # take the last quote (or <id>) out again
+qotm favorites                # list them (--json for a list of objects)
+qotm add "Name things twice." --author Ada   # keep a private quote
+qotm --personal               # a quote from your private quotes
+```
+
+Saving a quote twice changes nothing. Once you are signed in, `qotm sync`
+shares favorites with your account.
+
 Output is coloured on a terminal and plain when piped. `--plain` forces
 plain text (no colour, no wrapping); `NO_COLOR` and `TERM=dumb` are honoured.
 
