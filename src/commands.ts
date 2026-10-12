@@ -1,0 +1,16 @@
+import type { Io } from './io.js';
+
+/** One `qotm <name>` command. `run` receives the arguments after the name. */
+export type Command = {
+	name: string;
+	/** "qotm sync [--force]": shown in `qotm help <name>`. */
+	usage: string;
+	/** One line, for the command list. */
+	summary: string;
+	/** More detail for `qotm help <name>`. */
+	help?: string;
+	run: (args: string[], io: Io) => Promise<number> | number;
+};
+
+/** Every command, in the order `qotm --help` lists them. Each ticket adds its own. */
+export const COMMANDS: Command[] = [];

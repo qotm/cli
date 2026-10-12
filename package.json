@@ -1,0 +1,47 @@
+{
+	"name": "qotm",
+	"version": "2.0.0-dev",
+	"description": "One considered programming quote in your terminal, from a community that verifies and curates them.",
+	"keywords": [
+		"quotes",
+		"programming",
+		"terminal",
+		"cli"
+	],
+	"homepage": "https://qotm.dev",
+	"license": "MIT",
+	"author": "WessCoby",
+	"type": "module",
+	"bin": "dist/cli.js",
+	"files": [
+		"dist",
+		"data"
+	],
+	"engines": {
+		"node": ">=22.13"
+	},
+	"packageManager": "yarn@4.5.3",
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"typecheck": "tsc --noEmit",
+		"lint": "eslint .",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:pack": "node scripts/pack-check.mjs"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@types/node": "^22",
+		"eslint": "^10.12.0",
+		"globals": "^17.13.0",
+		"prettier": "^3.9.10",
+		"tsup": "^8.5.1",
+		"typescript": "~5.9",
+		"typescript-eslint": "^8.71.1",
+		"vite": "^8.3.4",
+		"vitest": "^5.0.3"
+	}
+}
