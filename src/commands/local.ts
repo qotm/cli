@@ -5,7 +5,9 @@ import { syncFavorites } from '../favorites-sync.js';
 import { CliError, type Io } from '../io.js';
 import { style, useColor } from '../output.js';
 import { qotmPaths } from '../paths.js';
-import { addFavorite, addPersonal, readFavorites, readHistory, removeFavorite } from '../store.js';
+import { api, apiMessage } from '../http.js';
+import { readSession } from '../state.js';
+import { addFavorite, addPersonal, readFavorites, readHistory, removeFavorite, setRemoteId } from '../store.js';
 
 const QUOTE_ID = /^q_[a-z0-9]{3,32}$/i;
 
@@ -116,10 +118,11 @@ export const add: Command = {
 	usage: 'qotm add "<text>" [--author <name>] [--work <title>] [--year <yyyy>]',
 	summary: 'keep a private quote',
 	help: `
-Private quotes stay on this machine and never enter the dataset.
-qotm --personal draws from them; qotm submit sends one for review.
+Private quotes never enter the dataset. Signed in, they are also kept in
+your account (My quotes on qotm.dev). qotm --personal draws from them;
+qotm submit <p_id> sends one for review as your original.
 `,
-	run(args, io) {
+	async run(args, io) {
 		const { values: v, positionals } = parse(
 			args,
 			{ author: { type: 'string' }, work: { type: 'string' }, year: { type: 'string' } },
@@ -136,9 +139,32 @@ qotm --personal draws from them; qotm submit sends one for review.
 			work: v.work?.trim() || null,
 			year: v.year ? Number(v.year) : null
 		});
-		io.stdout(
-			style.muted(useColor(io))(`kept as a private quote (${kept.id}). qotm --personal shows your private quotes.\n`)
-		);
+		const muted = style.muted(useColor(io));
+		io.stdout(muted(`kept as a private quote (${kept.id}). qotm --personal shows your private quotes.\n`));
+		// Signed in, it also goes to your account's private quotes (My quotes on qotm.dev).
+		const session = readSession(qotmPaths(io.env).config);
+		if (session) {
+			try {
+				const res = await api<{ id: string }>(io, '/v1/submissions', {
+					method: 'POST',
+					token: session.token,
+					timeoutMs: 5000,
+					body: {
+						type: 'private',
+						text,
+						...(kept.author ? { attribution: kept.author } : {}),
+						...(kept.work ? { source: kept.work } : {}),
+						...(kept.year ? { year: kept.year } : {})
+					}
+				});
+				if (res.status === 200 || res.status === 201) {
+					setRemoteId(data, kept.id, res.body.id);
+					io.stdout(muted(`and in your account's private quotes (${res.body.id})\n`));
+				} else io.stdout(muted(`not sent to your account: ${apiMessage(res)}\n`));
+			} catch {
+				io.stdout(muted('not sent to your account: the API could not be reached\n'));
+			}
+		}
 		return 0;
 	}
 };

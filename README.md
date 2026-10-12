@@ -63,6 +63,22 @@ qotm logout                   # sign out and revoke this terminal
 Signing in lists this terminal under Settings › Terminals on qotm.dev.
 Signing out keeps your local quotes, favorites and dataset.
 
+## Submitting
+
+```sh
+qotm submit "Premature optimization is the root of all evil." \
+  --author "Donald E. Knuth" --source "Structured Programming with go to Statements" \
+  --year 1974 --topic programming          # a canonical quote: a verifier checks the source
+qotm submit --original "Ship the smallest thing that teaches you something." \
+  --topic software-engineering --rights    # your own words
+qotm submit p_ab12cd34 --topic learning --rights   # one of your private quotes, as your original
+qotm submit --check "Make it work, make it right, make it fast."   # does qotm have it already?
+```
+
+Submitting needs `qotm login`. Every missing or invalid field is listed at
+once; the match against quotes already on qotm is shown before sending.
+Signed in, `qotm add` also keeps the quote in your account's private quotes.
+
 ## More
 
 ```sh

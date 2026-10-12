@@ -96,6 +96,8 @@ export type PersonalQuote = {
 	work: string | null;
 	year: number | null;
 	createdAt: string;
+	/** Its id in your account, once sent there (qotm add while signed in). */
+	remoteId?: string | null;
 };
 export type Personal = { quotes: PersonalQuote[] };
 export const personalFile = (data: string) => join(data, 'personal.json');
@@ -127,4 +129,10 @@ export function addPersonal(
 	};
 	writeJson(personalFile(data), { quotes: [...quotes, created] });
 	return created;
+}
+
+/** Records the account's id for a private quote sent there. */
+export function setRemoteId(data: string, id: string, remoteId: string): void {
+	const { quotes } = readPersonal(data);
+	writeJson(personalFile(data), { quotes: quotes.map((q) => (q.id === id ? { ...q, remoteId } : q)) });
 }
