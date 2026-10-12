@@ -23,7 +23,10 @@ node dist/cli.js    # run the build
 CLI, reseeds the backend's test database (`yarn test:db:seed:e2e` in
 `../backend/apps/api`), flushes the test Redis, and starts the API from its
 compiled build with `.env.test` on port 5170 (password sign-in on, so the
-tests approve device codes as the seeded member). It needs the backend's test
+tests approve device codes as the seeded member). A local server on 5171 stands in for the releases host (`RELEASES_BASE_URL`):
+setup writes the current release's file there and sets its sha256 and size in
+the test database; tests reach the folder with `inject('releases')`. It needs
+the backend's test
 stack up (`yarn test:dc:up` there) and `backend/apps/api/dist` built.
 Never run it alongside the backend's or web's e2e suites: they share the test
 database.
@@ -50,6 +53,11 @@ database.
   `https://api.qotm.site` or the test API on 5160 instead.
 - `src/state.ts`: session.json (config folder, mode 0600: the bearer token)
   and sync.json (data folder).
+- `src/commands/sync.ts`: the manifest (If-None-Match with the held
+  release's ETag; X-Qotm-Dataset and the bearer when signed in), a streamed
+  download into `qotm.sqlite.download-<pid>` hashed as it arrives, size,
+  sha256 and schema checks, then one rename over `qotm.sqlite` and
+  sync.json. Nothing touches the current file until the new one is proven.
 - `src/commands/login.ts`: the device flow (BUILD-PLAN §5): code, browser,
   poll at the API's interval (slow_down adds 5s), /v1/me, register the
   terminal with its label and X-Qotm-Dataset, keep the session. Logout

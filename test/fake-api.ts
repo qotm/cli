@@ -2,7 +2,9 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { AddressInfo } from 'node:net';
 
 export type Seen = { method: string; path: string; headers: IncomingMessage['headers']; body: unknown };
-type Handler = (req: Seen) => { status?: number; body?: unknown; headers?: Record<string, string> } | undefined;
+type Reply = { status?: number; body?: unknown; headers?: Record<string, string> };
+/** A route's answer; `raw` takes over the response (to send bytes, or to break off midway). */
+type Handler = (req: Seen, raw: ServerResponse) => Reply | 'handled' | undefined;
 
 /** A stand-in API for unit tests: routes by "METHOD /path", records every request. */
 export async function fakeApi(routes: Record<string, Handler>) {
@@ -20,7 +22,8 @@ export async function fakeApi(routes: Record<string, Handler>) {
 			};
 			seen.push(entry);
 			const handler = routes[`${entry.method} ${path.split('?')[0]}`];
-			const out = handler?.(entry) ?? { status: 404, body: { statusCode: 404, message: 'Not Found' } };
+			const out = handler?.(entry, res) ?? { status: 404, body: { statusCode: 404, message: 'Not Found' } };
+			if (out === 'handled') return;
 			res.writeHead(out.status ?? 200, { 'content-type': 'application/json', ...out.headers });
 			res.end(out.body === undefined ? '' : typeof out.body === 'string' ? out.body : JSON.stringify(out.body));
 		});

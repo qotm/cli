@@ -1,6 +1,7 @@
 import { add, favorites, save, unsave } from './commands/local.js';
 import { login, logout } from './commands/login.js';
 import { last, quote } from './commands/quote.js';
+import { sync } from './commands/sync.js';
 import { config, doctor, open, search, status } from './commands/tools.js';
 import type { Io } from './io.js';
 
@@ -26,6 +27,7 @@ export const COMMANDS: Command[] = [
 	add,
 	open,
 	search,
+	sync,
 	login,
 	logout,
 	status,

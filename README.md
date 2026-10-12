@@ -40,6 +40,17 @@ qotm --personal               # a quote from your private quotes
 Saving a quote twice changes nothing. Once you are signed in, `qotm sync`
 shares favorites with your account.
 
+## Updating the quotes
+
+```sh
+qotm sync                     # fetch the latest dataset release
+```
+
+`qotm sync` checks the download against the release manifest (size and
+sha256) and replaces your copy in one step: an interrupted or mismatched
+download leaves your quotes as they were. It asks with the version it holds,
+so an up-to-date copy costs one small request.
+
 ## Your account
 
 ```sh
