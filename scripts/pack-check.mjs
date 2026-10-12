@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ALLOWED = [/^package\.json$/, /^README\.md$/, /^LICENSE$/, /^dist\//, /^data\//];
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -26,7 +27,17 @@ try {
 	const bin = process.platform === 'win32' ? join(prefix, 'qotm.cmd') : join(prefix, 'bin', 'qotm');
 	const help = run(bin, ['--help']);
 	if (!help.includes('Usage:')) throw new Error(`qotm --help printed something else:\n${help}`);
-	console.log(`ok: ${packed.filename} (${files.length} files, ${packed.size} bytes) installs and runs qotm --help`);
+
+	// A fresh install shows a quote with the network refused (from the bundled snapshot).
+	const noNetwork = pathToFileURL(fileURLToPath(new URL('../test/no-network.mjs', import.meta.url))).href;
+	const quote = run(bin, [], {
+		env: { ...process.env, QOTM_HOME: join(scratch, 'home'), NODE_OPTIONS: `--import=${noNetwork}` }
+	});
+	if (!/\n— .+\n$/.test(quote)) throw new Error(`qotm printed no quote offline:\n${quote}`);
+	console.log(
+		`ok: ${packed.filename} (${files.length} files, ${packed.size} bytes) installs, runs qotm --help, and shows a quote offline:`
+	);
+	console.log(quote.replace(/^/gm, '    ').trimEnd());
 	for (const f of files) console.log(`  ${f}`);
 } finally {
 	rmSync(scratch, { recursive: true, force: true });

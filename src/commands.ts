@@ -1,3 +1,4 @@
+import { quote } from './commands/quote.js';
 import type { Io } from './io.js';
 
 /** One `qotm <name>` command. `run` receives the arguments after the name. */
@@ -13,4 +14,7 @@ export type Command = {
 };
 
 /** Every command, in the order `qotm --help` lists them. Each ticket adds its own. */
-export const COMMANDS: Command[] = [];
+export const COMMANDS: Command[] = [quote];
+
+/** What `qotm` with no command runs. */
+export const DEFAULT_COMMAND = quote;

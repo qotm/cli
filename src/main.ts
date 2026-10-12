@@ -1,4 +1,4 @@
-import { COMMANDS, type Command } from './commands.js';
+import { COMMANDS, DEFAULT_COMMAND, type Command } from './commands.js';
 import { CliError, type Io } from './io.js';
 
 export const VERSION = __QOTM_VERSION__;
@@ -43,7 +43,8 @@ export async function main(argv: string[], io: Io): Promise<number> {
 			io.stdout(`${VERSION}\n`);
 			return 0;
 		}
-		if (first === undefined || first === '-h' || first === '--help') {
+		if (first === undefined) return await DEFAULT_COMMAND.run([], io);
+		if (first === '-h' || first === '--help') {
 			io.stdout(usage());
 			return 0;
 		}

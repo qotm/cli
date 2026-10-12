@@ -11,6 +11,8 @@ export default defineConfig({
 	platform: 'node',
 	target: 'node22',
 	clean: true,
+	// Keep `node:` on imports: `sqlite` is only a builtin with the prefix.
+	removeNodeProtocol: false,
 	splitting: false,
 	sourcemap: false,
 	banner: { js: '#!/usr/bin/env node' },
