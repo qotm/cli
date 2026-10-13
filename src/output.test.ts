@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { tempDir } from '../test/datasets.js';
 import { testIo } from '../test/io.js';
 import { quoteUrl, useColor, wrap } from './output.js';
 import { formatQuote, jsonQuote, type Shown } from './quotes.js';
@@ -63,7 +64,10 @@ describe('output', () => {
 	});
 
 	it('--json has the documented shape', () => {
-		const json = JSON.parse(jsonQuote(Q, testIo().io, { meta: { version: 'v2026.09.1' } } as never));
+		// An empty home: the defaults, not this machine's settings.json.
+		const json = JSON.parse(
+			jsonQuote(Q, testIo({ QOTM_HOME: tempDir() }).io, { meta: { version: 'v2026.09.1' } } as never)
+		);
 		expect(Object.keys(json)).toEqual([
 			'id',
 			'text',

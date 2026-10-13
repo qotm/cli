@@ -1,7 +1,8 @@
 import { parse } from '../args.js';
 import type { Command } from '../commands.js';
 import { openDataset } from '../dataset.js';
-import { setting } from '../config.js';
+import { SETTINGS, setting } from '../config.js';
+import type { Style } from '../render.js';
 import { CliError, type Io } from '../io.js';
 import { qotmPaths } from '../paths.js';
 import { closest, pick } from '../pick.js';
@@ -9,6 +10,7 @@ import { formatQuote, fromDataset, fromPersonal, jsonQuote, type Shown } from '.
 import { readFavorites, readHistory, readPersonal, remember } from '../store.js';
 
 const OUTPUT = {
+	style: { type: 'string' },
 	plain: { type: 'boolean' },
 	json: { type: 'boolean' },
 	source: { type: 'boolean' }
@@ -22,10 +24,16 @@ const OPTIONS = {
 	...OUTPUT
 } as const;
 
-type Output = { plain?: boolean; json?: boolean; source?: boolean };
+type Output = { style?: string; plain?: boolean; json?: boolean; source?: boolean };
 
 function print(q: Shown, io: Io, out: Output, dataset: Parameters<typeof jsonQuote>[2]) {
-	io.stdout(out.json ? jsonQuote(q, io, dataset) : formatQuote(q, io, { ...out, columns: io.columns }));
+	// --style for one run; else the style setting (each checked the same way).
+	const drawn = SETTINGS.style.parse(out.style ?? setting(io, 'style')) as Style;
+	io.stdout(
+		out.json
+			? jsonQuote(q, io, dataset)
+			: formatQuote(q, io, { plain: out.plain, source: out.source, style: drawn, columns: io.columns })
+	);
 }
 
 function unknown(kind: 'topic' | 'author', slug: string, options: string[]): never {
@@ -41,7 +49,8 @@ function unknown(kind: 'topic' | 'author', slug: string, options: string[]): nev
 /** `qotm`: one considered quote from the local dataset. Never touches the network. */
 export const quote: Command = {
 	name: 'quote',
-	usage: 'qotm [--topic <slug>] [--author <slug>] [--favorites | --personal] [--source] [--plain | --json]',
+	usage:
+		'qotm [--topic <slug>] [--author <slug>] [--favorites | --personal] [--source] [--style <name>] [--plain | --json]',
 	summary: 'print a quote (the default)',
 	help: `
 Prints one curated quote from the local dataset, avoiding the last 50 shown
@@ -52,7 +61,10 @@ Prints one curated quote from the local dataset, avoiding the last 50 shown
   --favorites       from your favorites (qotm save)
   --personal        from your private quotes (qotm add)
   --source          add where it is from
-  --plain           no colour or wrapping (also when piped)
+  --style <name>    draw it as pull (the default), bubble, card or slab, this
+                    once (qotm config set style <name> to keep one)
+  --plain           just the words and the credit: no shape, colour or
+                    wrapping (also when piped)
   --json            one JSON object: id, text, type, author, contributor, work,
                     year, source, sourceUrl, topics, url, dataset
 `,
@@ -111,7 +123,7 @@ Prints one curated quote from the local dataset, avoiding the last 50 shown
 /** `qotm last`: the previous quote again, as it was shown. */
 export const last: Command = {
 	name: 'last',
-	usage: 'qotm last [--source] [--plain | --json]',
+	usage: 'qotm last [--source] [--style <name>] [--plain | --json]',
 	summary: 'show the last quote again',
 	run(args, io) {
 		const { values: v } = parse(args, OUTPUT);

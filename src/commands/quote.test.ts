@@ -29,6 +29,24 @@ describe('qotm', () => {
 		expect(readHistory(h.data).shown).toHaveLength(1);
 	});
 
+	it('draws the quote in the configured style, or --style for one run', async () => {
+		const h = home();
+		const tty = async (...argv: string[]) => {
+			const t = testIo({ ...h.env, NO_COLOR: '' }, true);
+			const code = await main(argv, t.io);
+			return { code, out: t.out(), err: t.err() };
+		};
+		expect((await tty()).out).toContain('▄▄ ▄▄');
+		expect((await tty('--style', 'card')).out).toContain('✓ curated ─╯');
+		expect((await tty('config', 'set', 'style', 'bubble')).code).toBe(0);
+		expect((await tty()).out).toContain('╰──┬');
+		expect((await tty('last', '--style', 'slab')).out).toContain('▌');
+		const bad = await tty('--style', 'cow');
+		expect(bad.code).toBe(2);
+		expect(bad.err).toContain('style is pull, bubble, card or slab.');
+		expect((await tty('config', 'set', 'style', 'cow')).code).toBe(2);
+	});
+
 	it('does not repeat itself until it has shown everything', async () => {
 		const h = home();
 		const seen = new Set<string>();

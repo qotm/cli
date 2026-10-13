@@ -46,7 +46,13 @@ database.
   `test/schema.test.ts` keeps equal. `test/no-network.mjs` (an `--import`
   preload) makes any network access throw.
 - `src/config.ts`: settings.json in the config folder (api, site, color,
-  history), with env overrides (`QOTM_API_URL`, `QOTM_SITE_URL`).
+  style, history), with env overrides (`QOTM_API_URL`, `QOTM_SITE_URL`).
+- `src/render.ts`: how a quote is drawn on a terminal, in four styles (pull,
+  the default; bubble; card; slab), as designed on the "CLI render" page of
+  the Paper file qotm_mail. Balanced wrapping, 60 columns at most, no shape
+  under 40 columns; `src/quotes.ts` (`formatQuote`) decides shaped or plain.
+  `src/__snapshots__/` holds each style's drawing: review a changed snapshot
+  as a design change.
 - `src/http.ts`: `api()`, the one way to call the API (User-Agent
   `qotm/<version>`, JSON, timeouts, errors in words). Node's fetch refuses the
   Fetch spec's "bad ports" (5060, the dev API's, is one): point the CLI at

@@ -85,7 +85,7 @@ Signed in, `qotm add` also keeps the quote in your account's private quotes.
 qotm open                     # the last quote's page on qotm.dev ("opening q/1t7c4e in your browser")
 qotm search complexity        # search your dataset, offline (--web: on qotm.dev; --json)
 qotm status                   # dataset version, last sync, account, counts (--json)
-qotm config                   # settings: api, site, color, history (get / set / unset; --json)
+qotm config                   # settings: api, site, color, style, history (get / set / unset; --json)
 qotm doctor                   # check Node, folders, the dataset's sha256 and the API (--json)
 ```
 
@@ -93,8 +93,26 @@ qotm doctor                   # check Node, folders, the dataset's sha256 and th
 `QOTM_API_URL` and `QOTM_SITE_URL` override the api and site settings for
 one run.
 
-Output is coloured on a terminal and plain when piped. `--plain` forces
-plain text (no colour, no wrapping); `NO_COLOR` and `TERM=dumb` are honoured.
+### How a quote looks
+
+On a terminal, a quote is drawn in one of four styles: box-drawing and block
+characters, no extra tools.
+
+```sh
+qotm config set style pull    # the default: clay quote marks beside the words
+qotm config set style bubble  # a speech bubble with the qotm "q" (cowsay's heir)
+qotm config set style card    # a centred card, its id and status in the edge
+qotm config set style slab    # a lighter panel with a clay edge (best in colour)
+qotm --style card             # one style, this once
+```
+
+The shape fits the quote: lines wrap at 60 columns at most, never past the
+terminal, and are balanced so no word sits alone on the last line. Narrower
+than 40 columns, the quote prints without a shape.
+
+Output is coloured on a terminal and plain when piped (the words and the
+credit, for scripts and for `qotm | cowsay`). `--plain` forces that plain
+text. `NO_COLOR` and `TERM=dumb` drop the colour but keep the shape.
 
 ### `--json`
 

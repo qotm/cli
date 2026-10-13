@@ -124,13 +124,14 @@ describe('config', () => {
 		expect((await run(env, 'config', 'set', 'color', 'sometimes')).code).toBe(2);
 		expect((await run(env, 'config', 'set', 'api', 'not a url')).code).toBe(2);
 		expect((await run(env, 'config', 'get', 'nope')).err).toContain(
-			'Unknown setting "nope". Settings: api, site, color, history.'
+			'Unknown setting "nope". Settings: api, site, color, style, history.'
 		);
 		expect((await run(env, 'config', 'unset', 'api')).out).toBe('api = https://api.qotm.dev (default)\n');
 		expect(JSON.parse((await run(env, 'config', '--json')).out)).toEqual({
 			api: 'https://api.qotm.dev',
 			site: 'https://qotm.dev',
 			color: 'auto',
+			style: 'pull',
 			history: '50'
 		});
 	});

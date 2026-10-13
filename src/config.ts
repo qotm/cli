@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { CliError, type Io } from './io.js';
 import { qotmPaths } from './paths.js';
+import { STYLES } from './render.js';
 import { readJson, writeJson } from './store.js';
 
 /** Every setting `qotm config` knows, with its default and how to read a value. */
@@ -23,6 +24,16 @@ export const SETTINGS = {
 		describe: 'auto (on a terminal), always or never',
 		parse: (v: string) => {
 			if (!['auto', 'always', 'never'].includes(v)) throw new CliError('color is auto, always or never.', 2);
+			return v;
+		}
+	},
+	style: {
+		default: 'pull',
+		env: undefined,
+		describe: 'how a quote is drawn: pull, bubble, card or slab',
+		parse: (v: string) => {
+			if (!(STYLES as readonly string[]).includes(v))
+				throw new CliError(`style is ${STYLES.slice(0, -1).join(', ')} or ${STYLES.at(-1)}.`, 2);
 			return v;
 		}
 	},

@@ -1,6 +1,7 @@
 import type { Dataset, Quote } from './dataset.js';
 import type { Io } from './io.js';
 import { quoteUrl, style, useColor, wrap } from './output.js';
+import { MIN_COLUMNS, render, type Style } from './render.js';
 import type { PersonalQuote } from './store.js';
 
 /** A quote as `qotm` shows it: from the dataset, or one of your private quotes. */
@@ -57,17 +58,36 @@ function sourceLine(q: Shown): string | null {
 	return parts.length ? parts.join(' · ') : null;
 }
 
-export type FormatOptions = { plain?: boolean; source?: boolean; columns?: number };
+export type FormatOptions = { plain?: boolean; source?: boolean; columns?: number; style?: Style };
 
 /**
- * The quote, as the landing page's terminal shows it: the words in bold,
- * then a clay "—" and the author, muted. Plain: the same lines with no
- * escape codes and no wrapping, for pipes.
+ * The quote on a terminal: drawn in `style` (src/render.ts), with colour
+ * when the terminal takes it. Piped, --plain, or narrower than MIN_COLUMNS:
+ * the words, then "—" and the credit, with no shape (and, piped or --plain,
+ * no escape codes and no wrapping).
  */
 export function formatQuote(q: Shown, io: Io, opts: FormatOptions = {}): string {
 	const color = useColor(io, opts.plain);
+	const columns = opts.columns ?? 80;
+	if (!opts.plain && (io.isTTY || color) && columns >= MIN_COLUMNS) {
+		const personal = q.type === 'personal';
+		return render(
+			{
+				text: q.text,
+				credit: credit(q),
+				source: opts.source ? (sourceLine(q) ?? 'no source on record') : null,
+				ref: personal ? null : `q/${q.id.replace(/^q_/, '')}`,
+				status: personal ? 'private' : q.type === 'original' ? '✓ original' : '✓ curated',
+				topics: q.topics.map((t) => t.replace(/-/g, ' '))
+			},
+			opts.style ?? 'pull',
+			columns,
+			color
+		);
+	}
 	const width = Math.max(20, Math.min(opts.columns ?? 80, 80) - 2);
-	const text = color ? wrap(q.text, width) : q.text;
+	// A terminal wraps (too narrow for a shape); a pipe gets the text whole.
+	const text = color || (io.isTTY && !opts.plain) ? wrap(q.text, width) : q.text;
 	const lines = [style.bold(color)(text), `${style.clay(color)('—')}  ${style.muted(color)(credit(q))}`];
 	if (opts.source) {
 		const where = sourceLine(q);
