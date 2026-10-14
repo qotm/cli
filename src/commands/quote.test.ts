@@ -37,7 +37,8 @@ describe('qotm', () => {
 			return { code, out: t.out(), err: t.err() };
 		};
 		expect((await tty()).out).toContain('▄▄ ▄▄');
-		expect((await tty('--style', 'card')).out).toContain('✓ curated ─╯');
+		// The quote is random: the fixture holds curated quotes and an original.
+		expect((await tty('--style', 'card')).out).toMatch(/✓ (curated|original) ─╯/);
 		expect((await tty('config', 'set', 'style', 'bubble')).code).toBe(0);
 		expect((await tty()).out).toContain('╰──┬');
 		expect((await tty('last', '--style', 'slab')).out).toContain('▌');
