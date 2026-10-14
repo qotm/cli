@@ -1,9 +1,9 @@
 {
-	"version": "v0000.00.0",
+	"version": "v2026.10.1",
 	"schemaVersion": 1,
-	"builtAt": "2026-10-12T09:40:15.056Z",
-	"publishedAt": null,
-	"quotes": 7,
-	"size": 61440,
-	"sha256": "a2b5215098c5f616ce689c2328b66424c4d8799768be081ef35b1095b9c4d2bc"
+	"builtAt": "2026-10-14T00:03:11.444Z",
+	"publishedAt": "2026-10-14T00:03:49.836Z",
+	"quotes": 500,
+	"size": 352256,
+	"sha256": "aa01263935e9b42a5ebcda9b8b0bc0b69815514410180174a18e507e17ceed88"
 }
