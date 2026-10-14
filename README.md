@@ -8,7 +8,7 @@ npm i -g qotm
 qotm
 ```
 
-Requires Node.js 22.13 or later. No account and no network on the default
+Requires Node.js 22.16 or later (or 24+). No account and no network on the default
 path: quotes come from a local copy of the curated dataset, which ships with
 the package.
 

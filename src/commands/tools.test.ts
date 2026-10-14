@@ -203,9 +203,11 @@ describe('doctor', () => {
 	});
 
 	it('knows the Node floor', () => {
-		expect(nodeOk('v22.13.0')).toBe(true);
-		expect(nodeOk('v22.12.1')).toBe(false);
+		expect(nodeOk('v22.16.0')).toBe(true);
+		expect(nodeOk('v22.15.1')).toBe(false);
+		expect(nodeOk('v23.11.1')).toBe(false);
 		expect(nodeOk('v24.0.0')).toBe(true);
+		expect(nodeOk('v26.1.0')).toBe(true);
 		expect(nodeOk('v20.19.0')).toBe(false);
 	});
 

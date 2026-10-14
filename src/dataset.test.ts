@@ -77,6 +77,16 @@ describe('the dataset', () => {
 		opened.dataset.close();
 	});
 
+	it('says which Node search needs when its SQLite has no FTS5 (Node 22.13–22.15)', () => {
+		const ds = Dataset.open(SNAPSHOT);
+		const db = (ds as unknown as { db: DatabaseSync }).db;
+		db.prepare = () => {
+			throw new Error('no such module: fts5');
+		};
+		expect(() => ds.search('complexity')).toThrow(/qotm search needs Node.js 22.16\+ or 24\+/);
+		ds.close();
+	});
+
 	it('ships a usable snapshot', () => {
 		const ds = Dataset.open(SNAPSHOT);
 		expect(ds.meta.schemaVersion).toBe(1);

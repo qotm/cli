@@ -9,12 +9,12 @@ on:
 
 jobs:
   verify:
-    name: Lint, typecheck, test, build, pack (${{ matrix.os }})
+    name: Lint, typecheck, test, build, pack (${{ matrix.os }}, Node ${{ matrix.node }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node: [22.13, 24]
+        node: [22.16, 24]
     runs-on: ${{ matrix.os }}
 
     steps:

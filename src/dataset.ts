@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
+import { CliError } from './io.js';
 
 /** The dataset schema this qotm reads (backend/apps/worker/src/dataset/schema.ts). */
 export const SCHEMA_VERSION = 1;
@@ -158,13 +159,23 @@ export class Dataset {
 		const words = text.match(/[\p{L}\p{N}]+/gu) ?? [];
 		if (!words.length) return [];
 		const match = words.map((w) => `"${w.replace(/"/g, '')}"*`).join(' ');
-		return (
-			this.db
-				.prepare(
-					'SELECT q.* FROM quotes_fts f JOIN quotes q ON q.n = f.rowid WHERE quotes_fts MATCH ? ORDER BY rank LIMIT ?'
-				)
-				.all(match, limit) as Row[]
-		).map(toQuote);
+		try {
+			return (
+				this.db
+					.prepare(
+						'SELECT q.* FROM quotes_fts f JOIN quotes q ON q.n = f.rowid WHERE quotes_fts MATCH ? ORDER BY rank LIMIT ?'
+					)
+					.all(match, limit) as Row[]
+			).map(toQuote);
+		} catch (error) {
+			// Node's SQLite gained FTS5 in 22.16 (and 24): older ones install with a warning.
+			if (error instanceof Error && /no such module: fts5/.test(error.message)) {
+				throw new CliError(
+					`qotm search needs Node.js 22.16+ or 24+ (this is ${process.version}). Everything else works; update Node to search, or use qotm search --web.`
+				);
+			}
+			throw error;
+		}
 	}
 
 	close(): void {

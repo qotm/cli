@@ -214,11 +214,15 @@ type Check = { name: string; ok: boolean; detail: string };
 const sha256 = (file: string) => createHash('sha256').update(readFileSync(file)).digest('hex');
 
 /** The minimum Node this qotm runs on (node:sqlite). */
-export const MIN_NODE = [22, 13] as const;
+/**
+ * The Node.js versions whose built-in SQLite has FTS5 (`qotm search`): 22.16
+ * and later in the 22 line, and 24 on. 23 never got it, and is end of life.
+ */
+export const NODE_SUPPORTED = '22.16+ or 24+';
 
 export function nodeOk(version: string): boolean {
 	const [major = 0, minor = 0] = version.replace(/^v/, '').split('.').map(Number);
-	return major > MIN_NODE[0] || (major === MIN_NODE[0] && minor >= MIN_NODE[1]);
+	return (major === 22 && minor >= 16) || major >= 24;
 }
 
 /** `qotm doctor`: checks the install and says what is wrong. Exits 1 when a check fails. */
@@ -228,7 +232,7 @@ export const doctor: Command = {
 	summary: 'check the install: Node, folders, dataset, API',
 	help: `
 Checks, and names any problem:
-  node       Node.js ${MIN_NODE.join('.')} or later
+  node       Node.js ${NODE_SUPPORTED}
   folders    the config and data folders can be written
   dataset    the dataset opens, and its sha256 matches its manifest
   api        the API answers (skipped with --offline)
@@ -241,7 +245,7 @@ Checks, and names any problem:
 		add(
 			'node',
 			nodeOk(process.version),
-			nodeOk(process.version) ? process.version : `${process.version}: qotm needs ${MIN_NODE.join('.')} or later`
+			nodeOk(process.version) ? process.version : `${process.version}: qotm needs Node.js ${NODE_SUPPORTED}`
 		);
 
 		const paths = qotmPaths(io.env);

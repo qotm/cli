@@ -80,7 +80,8 @@ database.
 ## Rules
 
 - **No runtime dependencies.** tsup bundles everything into `dist/cli.js`;
-  SQLite is Node's built-in `node:sqlite` (hence Node ≥ 22.13), so a global
+  SQLite is Node's built-in `node:sqlite`, with FTS5 for `qotm search`
+  (hence Node 22.16+ or 24+; 22.13–22.15 and 23 lack FTS5), so a global
   install builds nothing.
 - **Offline first.** The default path (`qotm`) never touches the network;
   the binary tests run it with `test/no-network.mjs`.
@@ -96,7 +97,7 @@ database.
 ## CI and releases (GitHub: qotm/cli)
 
 - `.github/workflows/ci.yml`: every push and pull request, on Linux, macOS
-  and Windows with Node 22.13 and 24: typecheck, lint, format, build, test,
+  and Windows with Node 22.16 and 24: typecheck, lint, format, build, test,
   `test:pack`.
 - `.github/workflows/release.yml`: a `v*` tag publishes. It reruns CI, checks
   the tag equals `package.json`'s version, bundles the latest production
