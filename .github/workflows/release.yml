@@ -1,0 +1,80 @@
+# Publishes qotm to npm when a version tag is pushed:
+#
+#   npm version 2.0.1 && git push --follow-tags
+#
+# npm trusts this workflow directly (Trusted Publishing, set on the package's
+# npm settings: GitHub Actions, qotm/cli, release.yml, environment npm), so no
+# npm token is stored anywhere, and every version carries a provenance
+# statement linking it to the commit and run that built it. The `npm`
+# environment only admits v* tags, so nothing else can reach that trust.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: write # the GitHub release
+      id-token: write # npm trusted publishing and provenance
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'yarn'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npm install --global npm@11
+
+      - run: yarn install --immutable
+
+      - name: The tag names the package's version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $version" >&2
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      # A fresh install shows quotes offline until its first `qotm sync`: ship
+      # the latest published dataset release, checked against its manifest.
+      - name: Bundle the latest dataset release
+        run: node scripts/snapshot.mjs
+
+      - run: yarn build
+      - run: yarn test
+      - name: npm pack installs and runs
+        run: yarn test:pack
+
+      # A prerelease (2.1.0-beta.1) goes to the `next` dist-tag, so
+      # `npm i -g qotm` keeps installing the latest stable version.
+      - name: Publish to npm
+        run: |
+          if [[ "$VERSION" == *-* ]]; then npm publish --access public --tag next
+          else npm publish --access public; fi
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=(--verify-tag --generate-notes --title "$GITHUB_REF_NAME")
+          if [[ "$VERSION" == *-* ]]; then flags+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" "${flags[@]}"

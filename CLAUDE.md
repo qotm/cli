@@ -92,3 +92,18 @@ database.
   usage error. `QOTM_DEBUG=1` prints stacks for unexpected ones.
 - The package ships only `dist/`, `data/` (the dataset snapshot), README and
   LICENSE; `yarn test:pack` enforces it.
+
+## CI and releases (GitHub: qotm/cli)
+
+- `.github/workflows/ci.yml`: every push and pull request, on Linux, macOS
+  and Windows with Node 22.13 and 24: typecheck, lint, format, build, test,
+  `test:pack`.
+- `.github/workflows/release.yml`: a `v*` tag publishes. It reruns CI, checks
+  the tag equals `package.json`'s version, bundles the latest production
+  dataset release (`scripts/snapshot.mjs`), builds, tests, publishes to npm
+  through Trusted Publishing (no token; provenance attached) from the `npm`
+  environment (deployable from `v*` tags only), and creates the GitHub
+  release. A version with a `-` (`2.1.0-beta.1`) goes to the `next`
+  dist-tag. To release: `npm version <patch|minor|major>` on `main`, then
+  `git push --follow-tags`. A published version can never be replaced, only
+  followed by a new one.
