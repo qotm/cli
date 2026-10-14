@@ -6,7 +6,8 @@ import { describe, expect, it } from 'vitest';
 import { tempDir } from './datasets.js';
 
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
-const NO_NETWORK = fileURLToPath(new URL('./no-network.mjs', import.meta.url));
+// A file:// URL, not a path: on Windows, --import refuses `D:\...` as a URL scheme.
+const NO_NETWORK = new URL('./no-network.mjs', import.meta.url).href;
 
 /** The built binary, in a fresh home, with the network refused. */
 function qotm(args: string[], home = tempDir()) {
