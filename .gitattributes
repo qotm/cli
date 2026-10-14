@@ -1,0 +1,3 @@
+# LF everywhere, Windows checkouts included: Prettier (format:check) expects it.
+* text=auto eol=lf
+*.sqlite binary
