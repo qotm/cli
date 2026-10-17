@@ -1,6 +1,6 @@
 {
 	"name": "qotm",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "One considered programming quote in your terminal, from a community that verifies and curates them.",
 	"keywords": [
 		"quotes",
