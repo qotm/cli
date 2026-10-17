@@ -10,7 +10,22 @@ qotm
 
 Requires Node.js 22.16 or later (or 24+). No account and no network on the default
 path: quotes come from a local copy of the curated dataset, which ships with
-the package.
+the package. The tour of every command is at [qotm.dev/cli](https://qotm.dev/cli).
+
+## A quote in every new terminal
+
+Add one line to the end of your shell's startup file:
+
+```sh
+command -v qotm >/dev/null && qotm                          # ~/.zshrc
+[[ $- == *i* ]] && command -v qotm >/dev/null && qotm       # ~/.bashrc
+status is-interactive; and type -q qotm; and qotm           # ~/.config/fish/config.fish
+if (Get-Command qotm -ErrorAction SilentlyContinue) { qotm }  # $PROFILE (PowerShell)
+```
+
+The guard skips it where qotm isn't installed, and bash's `$-` check keeps it
+out of non-interactive shells (scp, rsync), so the line is safe in shared
+dotfiles.
 
 ## Reading quotes
 

@@ -93,6 +93,9 @@ database.
   usage error. `QOTM_DEBUG=1` prints stacks for unexpected ones.
 - The package ships only `dist/`, `data/` (the dataset snapshot), README and
   LICENSE; `yarn test:pack` enforces it.
+- **qotm.dev/cli documents this tool** (`web/src/features/cli/docs.ts`): its
+  commands, flags and the output it shows. A change to a command, a flag or
+  what qotm prints updates that page in the same release.
 
 ## CI and releases (GitHub: qotm/cli)
 
